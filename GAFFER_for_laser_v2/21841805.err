@@ -1,0 +1,2 @@
+/lustre/home/acct-phywfy/phywfy-flash/.local/lib/python3.6/site-packages/geatpy/visualization/ParCoordPlotter.py:109: UserWarning: Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.
+  plt.show()

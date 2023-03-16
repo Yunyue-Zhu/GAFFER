@@ -1,0 +1,168 @@
+Well met!
+This file is created by Yunyue Zhu (zhuyunyue@sjtu.edu.cn), 24 Dec 2022.
+
+This is the document (and instruction) about our new Genetic Algorithm (GA) toolkit GAFFER
+(Genetic Algorithm For Fusion Energy Return, or 灯光师, What an awkward name :))
+for optimization of laser and target parameters.
+
+The master branch is now GAFFER_for_laser_v2.
+(The directory name. Mayhaps it would be a branch one day.)
+
+===================================================================================================
+The project is powered by
+Geatpy (The Genetic and Evolutionary  Algorithm Toolbox for Python with High Performance;
+website: http://geatpy.com/index.php/home/;
+github: https://github.com/geatpy-dev/geatpy) and
+MULTI-IFE (For any questions, please contact "fuyuan.wu@sjtu.edu.cn").
+
+Ihe project is inspired by the former GA toolkit genocop2-320kJdt03 (by Zbigniew Michalewicz),
+and under the guidance of Fuyuan Wu.
+
+===================================================================================================
+Quick start:
+
+Copy the whole directory to your own directory,
+Go to GAFFER_for_laser_v2 directory IN YOUR OWN COPY and RUN
+sbatch job.slurm
+to submit the job (and start the program).
+The job will complete within 5 min under the current settings.
+
+There are several OUTPUT files.
+result.txt (named in job.slurm)     contains the log of each generation, including the optimized,
+                                    maximum, average, minimum fitness and its standard deviation,
+                                    followed by information about the whole optimization, including
+                                    total number of individuals, run time, optimized fitness, and
+                                    optimized laser & target parameter.
+Trace Plot.svg                      is figure of the best & average fitness of each generation.
+Population Info/                    is a folder containing information about the overall best
+                                    individual, which is of little use.
+pop_info.txt                        contains FULL information of each individual each generation,
+                                    which will be explicated later.
+best_info.npy                       contains parameters and energy gain of the best individual
+                                    each generation, to be explicated later.
+                                    
+! WARNING
+! DO NOT submit multiple jobs (no matter the parameter) simultaneously in the same directory,
+THERE WILL BE A CONFLICTION AND CAUSE BOTH JOBS TO FAIL.
+This means you have to copy the whole ./GAFFER_for_laser/ directory and submit your job there.
+
+AND
+! If the program is interupted while running, MAKE SURE to run
+./myclean
+in the directory BEFORE you run GA again.
+
+===================================================================================================
+The INPUT (which is of physical importance)
+
+Population size (the number of individuals per generation)
+                                    main.py: line 8               "NIND"
+                                ! Remember to go to job.slurm and get more "total cpu" if you
+                                    choose a much lager population size. 
+
+Maximum generation                  main.py: line 16              "myAlgorithm.MAXGEN"
+                                    larger the number of generation, longer the run time,
+                                    and generally speaking 200 generations are quite enough.
+
+The lower and upper bound of laser and target parameters
+                                    WfOptimize.py: line 13-16     "lb" and "ub"
+                                ! The 27 parameters are respectly 12 "dt"s, 12 "p"s (for the laser,
+                                    see https://doi.org/10.1017/hpl.2022.4), and last 3 for target.
+                                    The sum of "dt"s will not exceed 25 (defined in
+                                    WfOptimize.py: line 73-74 "pop.CV")
+                                    If the total laser energy exceeds the limitation set in
+                                    MULTI-IFE, a zero feedback will be get from MULTI-IFE.
+                                ! Do not set the bound too loose at first for the above reason,
+                                    or the fitness is likely to lie flat at 0!
+
+The fitness                         WfOptimize.py: line 72        "pop.ObjV"
+                                    It is defined as the laser energy gain.
+                                    (contributed by Linqian Zeng, 028711zlq@sjtu.edu.cn)
+                                ! The denominator in the fitness evaluation are all shifted by
+                                    0.001 in order to avoid zero denominator, so the value might be
+                                    invalid with extremely samll (MULTI-IFE output) rhor, rhomax.
+
+===================================================================================================
+The OUTPUT
+
+pop_info.txt
+---------------------------------------------------------------------------------------------------
+The first line indicates the population size, and the following are individual information.
+
+Each line contains 38 numbers, which are
+0.00    {12 "dt"s}  {12 "p"s}   0.00    {3 target parameters}               #(29 multi-ife input)
+rhor    timean  vmean   ifar    alphaDT rhomax  ptmax   ekimp   elaser      #(9 multi-ife output)
+
+Note that the fitness is currently defined as the laser energy gain.
+
+best_info.npy   (Linqian Zeng, 028711zlq@sjtu.edu.cn)
+---------------------------------------------------------------------------------------------------
+numpy array of size (MAXGEN+1,28)
+The first row are zeros.
+The following rows are information of the best individual each generation, which are
+{12 "dt"s}  {12 "p"s}   {3 target parameters}   fitness
+
+===================================================================================================
+MORE about GAFFER
+
+The algorithm currently used for optimization is DE (Differential Evolution Algorithm),
+an algorithm similar to GA, but not the canonical GA.
+The optimization algorithm can be specified at main.py: line 15, and there are indeed GA and other
+heuristic algorithms in geatpy toolkit.
+
+The optimization parameter "myAlgorithm.mutOper.F""myAlgorithm.recOper.XOVR" at main.py: line 17-18
+can also be modified.
+
+
+The following is a brief introduction of algorithm realization, and some essential variables.
+
+WfOptimize (in WfOptimize.py) is defined as a subclass of ea.Problem, the aimFunc() is redefined to
+bridge the GA program and MULTI-IFE simulation, the fitness of each set of parameters is evaluated
+in the aimFunc with the feedback from MULTI-IFE. The data transmits through temporary files.
+
+Multiple MULTI-IFE simulations of each individual per generation run under multi-threading in order
+to improve efficiency, while other reading and writing processes run serially to ensure stability.
+
+The input "pop" of aimFunc is of class Population, which contains the data of one generation (it
+changes with the generation). It has several important components:
+pop.Phen                a (NIND,27) numpy array, laser&target parameter sets of the generation
+pop.ObjV                a (NIND,1) numpy array, the finess of each individual
+pop.CV                  a (NIND,1) numpy array, the distance to limits in parameter space
+
+The stat() function of ea.soea_DE_best_1_L_templet is redefined in my_soea_DE_best_1_L_templet.py,
+as a function of the subclass my_soea_DE_best_1_L_templet, to get best-per-generation output.
+
+
+With small population size (less than 10 for example) and few generations, you might run
+python3 main.py
+at login node for debug purpose.
+
+===================================================================================================
+The PREVIOUS VERSION is GAFFER_for_laser_v1,
+changes are mainly in the fitness function and addition of output file "best_info.npy".
+
+The README file of version 1 is archived as README_v1 for reference.
+
+===================================================================================================
+Anothor branch "GAFFER_for_laser_wf" is also provided, which has been aborted.
+
+This branch is able to sketch the optimized laser waveform of each generation in "Variables Value
+Plot.svg" along with "Trace Plot.svg".
+
+In order to achieve this goal without output textfile, the draw() function from
+ea.soea_DE_best_1_L_templet is redefined in my_soea_DE_best_1_L_templet.py, and draw() function
+from ea.ParCoordPlotter redefined in ParCoordPlotter_wf.py.
+
+The waveform figure obtained currently is rather primitive, and can be plot with data in
+best_info.npy, so this branch is of little use.
+
+The pop_info output code is commented there, at WfOptimize.py: line 51-53, and you are free to
+uncomment it according to your need.
+
+===================================================================================================
+Having any problems?
+CONTACT ME,
+or more preferably, 
+FIX IT YOURSELF after MAKING A BACKUP.
+
+All credit goes to ICF and all bugs are mine.
+ALL HAIR RESERVED

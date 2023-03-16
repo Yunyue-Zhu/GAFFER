@@ -1,0 +1,5 @@
+rm block_*
+rm *.dat
+rm *.out
+rm *.err
+rm *.log
