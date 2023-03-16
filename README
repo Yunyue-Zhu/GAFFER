@@ -2,8 +2,8 @@ Well met!
 This file is created by Yunyue Zhu (zhuyunyue@sjtu.edu.cn), 24 Dec 2022.
 
 This is the document (and instruction) about our new Genetic Algorithm (GA) toolkit GAFFER
-(Genetic Algorithm For Fusion Energy Return, or 灯光师, What an awkward name :))
-for optimization of laser and target parameters.
+(Genetic Algorithm For Fusion Energy Reactor (or Return? It depends on you!), or 灯光师, What an
+awkward name :)) for optimization of laser and target parameters.
 
 The master branch is now GAFFER_for_laser_v2.
 (The directory name. Mayhaps it would be a branch one day.)
