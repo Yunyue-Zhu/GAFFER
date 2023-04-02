@@ -2,11 +2,10 @@ Well met!
 This file is created by Yunyue Zhu (zhuyunyue@sjtu.edu.cn), 24 Dec 2022.
 
 This is the document (and instruction) about our new Genetic Algorithm (GA) toolkit GAFFER
-(Genetic Algorithm For Fusion Energy Reactor (or Return? It depends on you!), or 灯光师, What an
-awkward name :)) for optimization of laser and target parameters.
+(Genetic Algorithm For Fusion Energy Reactor, or 灯光师, What an awkward name :))
+for optimization of laser and target parameters.
 
-The master branch is now GAFFER_for_laser_v2.
-(The directory name. Mayhaps it would be a branch one day.)
+The main folder is now GAFFER_for_laser_v3.
 
 ===================================================================================================
 The project is powered by
@@ -44,7 +43,7 @@ best_info.npy                       contains parameters and energy gain of the b
 ! WARNING
 ! DO NOT submit multiple jobs (no matter the parameter) simultaneously in the same directory,
 THERE WILL BE A CONFLICTION AND CAUSE BOTH JOBS TO FAIL.
-This means you have to copy the whole ./GAFFER_for_laser/ directory and submit your job there.
+This means you have to copy the whole ./GAFFER_for_laser_v2/ directory and submit your job there.
 
 AND
 ! If the program is interupted while running, MAKE SURE to run
@@ -66,7 +65,8 @@ Maximum generation                  main.py: line 16              "myAlgorithm.M
 The lower and upper bound of laser and target parameters
                                     WfOptimize.py: line 13-16     "lb" and "ub"
                                 ! The 27 parameters are respectly 12 "dt"s, 12 "p"s (for the laser,
-                                    see https://doi.org/10.1017/hpl.2022.4), and last 3 for target.
+                                    see https://doi.org/10.1017/hpl.2022.4), and last 3 radiuses of
+                                    each layer of the target.
                                     The sum of "dt"s will not exceed 25 (defined in
                                     WfOptimize.py: line 73-74 "pop.CV")
                                     If the total laser energy exceeds the limitation set in
@@ -89,7 +89,7 @@ pop_info.txt
 The first line indicates the population size, and the following are individual information.
 
 Each line contains 38 numbers, which are
-0.00    {12 "dt"s}  {12 "p"s}   0.00    {3 target parameters}               #(29 multi-ife input)
+0.00    {12 "dt"s}  {12 "p"s}   0.00    {3 target radiuses}               #(29 multi-ife input)
 rhor    timean  vmean   ifar    alphaDT rhomax  ptmax   ekimp   elaser      #(9 multi-ife output)
 
 Note that the fitness is currently defined as the laser energy gain.
@@ -99,15 +99,15 @@ best_info.npy   (Linqian Zeng, 028711zlq@sjtu.edu.cn)
 numpy array of size (MAXGEN+1,28)
 The first row are zeros.
 The following rows are information of the best individual each generation, which are
-{12 "dt"s}  {12 "p"s}   {3 target parameters}   fitness
+{12 "dt"s}  {12 "p"s}   {3 target radiuses}   fitness
 
 ===================================================================================================
 MORE about GAFFER
 
-The algorithm currently used for optimization is DE (Differential Evolution Algorithm),
-an algorithm similar to GA, but not the canonical GA.
-The optimization algorithm can be specified at main.py: line 15, and there are indeed GA and other
-heuristic algorithms in geatpy toolkit.
+The algorithm currently used for optimization is single objective genetic algorithm.
+The optimization algorithm can be specified at my_soea_templet.py: line 5, and there are other
+heuristic algorithms such as differential evolution (DE) and multi objective algorithms in geatpy
+toolkit that can be tried.
 
 The optimization parameter "myAlgorithm.mutOper.F""myAlgorithm.recOper.XOVR" at main.py: line 17-18
 can also be modified.
@@ -128,8 +128,8 @@ pop.Phen                a (NIND,27) numpy array, laser&target parameter sets of 
 pop.ObjV                a (NIND,1) numpy array, the finess of each individual
 pop.CV                  a (NIND,1) numpy array, the distance to limits in parameter space
 
-The stat() function of ea.soea_DE_best_1_L_templet is redefined in my_soea_DE_best_1_L_templet.py,
-as a function of the subclass my_soea_DE_best_1_L_templet, to get best-per-generation output.
+The stat() function of ea.soea_SGA_templet is redefined in my_soea_templet.py,
+as a function of the subclass my_soea_templet, to get best-per-generation output.
 
 
 With small population size (less than 10 for example) and few generations, you might run
@@ -137,9 +137,19 @@ python3 main.py
 at login node for debug purpose.
 
 ===================================================================================================
-The PREVIOUS VERSION is GAFFER_for_laser_v1,
-changes are mainly in the fitness function and addition of output file "best_info.npy".
+CHANGES to the last version:
+# change algorithm from DE to GA
+# minor changes to a few file/class names
+# add multi_fin to run MULTI with fort.10 output
+# change to job.slurm to rerun the best candidate and get its fort.10
 
+PREVIOUS VERSIONS
+GAFFER_for_laser_v2:
+Changes are mainly in the fitness function and addition of output file "best_info.npy".
+The README file of version 2 is archived as README_v2 for reference.
+
+GAFFER_for_laser_v1:
+The first version.
 The README file of version 1 is archived as README_v1 for reference.
 
 ===================================================================================================
